@@ -3,9 +3,19 @@
 #include <stdlib.h>
 
 rbtree *new_rbtree(void) {
-  rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
-  // TODO: initialize struct if needed
-  return p;
+    rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
+    
+    // nil 노드 생성 및 초기화
+    p->nil = (node_t *)calloc(1, sizeof(node_t));
+    p->nil->color = RBTREE_BLACK;
+    p->nil->parent = p->nil;
+    p->nil->left = p->nil;
+    p->nil->right = p->nil;
+    
+    // 빈 트리 초기화
+    p->root = p->nil;
+    
+    return p;
 }
 
 void delete_rbtree(rbtree *t) {
