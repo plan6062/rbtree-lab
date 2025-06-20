@@ -18,9 +18,28 @@ rbtree *new_rbtree(void) {
     return p;
 }
 
+void delete_all_nodes(node_t *node, node_t *nil) {
+    if (node == nil) {
+        return;  // nil 노드에 도달하면 중단
+    }
+    
+    // 자식들부터 먼저 해제 (후위 순회)
+    delete_all_nodes(node->left, nil);
+    delete_all_nodes(node->right, nil);
+    
+    // 자식들이 모두 해제된 후에 현재 노드 해제
+    free(node);
+}
+
 void delete_rbtree(rbtree *t) {
-  // TODO: reclaim the tree nodes's memory
-  free(t);
+    // 1. 모든 실제 노드들 해제
+    delete_all_nodes(t->root, t->nil);
+    
+    // 2. nil 노드 해제
+    free(t->nil);
+    
+    // 3. 트리 구조체 해제
+    free(t);
 }
 
 node_t *rbtree_insert(rbtree *t, const key_t key) {
