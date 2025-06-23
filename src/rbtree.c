@@ -46,12 +46,75 @@ void delete_rbtree(rbtree *t)
   free(t);
 }
 
+void left_rotate(rbtree *t, node_t *x)
+{
+  node_t *y = x->right; // y = x의 오른쪽 자식
+
+  // 1. x의 오른쪽을 y의 왼쪽으로
+  x->right = y->left;
+  if (y->left != t->nil)
+  {
+    y->left->parent = x;
+  }
+
+  // 2. y의 부모를 x의 부모로
+  y->parent = x->parent;
+  if (x->parent == t->nil)
+  {
+    t->root = y; // x가 루트였다면 y가 새 루트
+  }
+  else if (x == x->parent->left)
+  {
+    x->parent->left = y;
+  }
+  else
+  {
+    x->parent->right = y;
+  }
+
+  // 3. x를 y의 왼쪽 자식으로
+  y->left = x;
+  x->parent = y;
+}
+
+void right_rotate(rbtree *t, node_t *x)
+{
+  node_t *y = x->left; // y = x의 왼쪽 자식
+
+  // 1. x의 왼쪽을 y의 오른쪽으로
+  x->left = y->right;
+  if (y->right != t->nil)
+  {
+    y->right->parent = x;
+  }
+
+  // 2. y의 부모를 x의 부모로
+  y->parent = x->parent;
+  if (x->parent == t->nil)
+  {
+    t->root = y; // x가 루트였다면 y가 새 루트
+  }
+  else if (x == x->parent->left)
+  {
+    x->parent->left = y;
+  }
+  else
+  {
+    x->parent->right = y;
+  }
+
+  // 3. x를 y의 오른쪽 자식으로
+  y->right = x;
+  x->parent = y;
+}
+
 node_t *rbtree_insert(rbtree *t, const key_t key)
 {
   // 1. 새 노드 생성
   node_t *new_node = (node_t *)calloc(1, sizeof(node_t));
+
   new_node->key = key;
-  new_node->color = RBTREE_RED; // 새 노드는 RED로 시작
+  new_node->color = RBTREE_RED;
   new_node->left = t->nil;
   new_node->right = t->nil;
   new_node->parent = t->nil;
@@ -117,10 +180,13 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
         // Case 2-1: 새 노드가 부모의 오른쪽 자식 (지그재그)
         if (new_node == new_node->parent->right)
         {
-          // 회전 필요
+          new_node = new_node->parent; // 포인터를 부모로 이동
+          left_rotate(t, new_node);
         }
         // Case 2-2: 새 노드가 부모의 왼쪽 자식 (일직선)
-        // 회전 필요
+        new_node->parent->color = RBTREE_BLACK;       // 부모를 BLACK으로
+        new_node->parent->parent->color = RBTREE_RED; // 조부모를 RED로
+        right_rotate(t, new_node->parent->parent);    // 오른쪽 회전
       }
     }
     // 부모가 조부모의 오른쪽 자식인 경우 (위와 대칭)
@@ -143,13 +209,18 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
         // Case 4-1: 새 노드가 부모의 왼쪽 자식 (지그재그)
         if (new_node == new_node->parent->left)
         {
-          // 회전 필요
+          new_node = new_node->parent; // 포인터를 부모로 이동
+          right_rotate(t, new_node);   // 회전 필요
         }
         // Case 4-2: 새 노드가 부모의 오른쪽 자식 (일직선)
-        // 회전 필요
+        new_node->parent->color = RBTREE_BLACK;       // 부모를 BLACK으로
+        new_node->parent->parent->color = RBTREE_RED; // 조부모를 RED로
+        left_rotate(t, new_node->parent->parent);     // 오른쪽 회전
       }
     }
   }
+
+  t->root->color = RBTREE_BLACK; // 루트 노드는 항상 BLACK
 
   return new_node;
 }
